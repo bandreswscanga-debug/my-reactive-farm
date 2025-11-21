@@ -1,16 +1,16 @@
-# React + Vite
+Cambie esta linea 
+const [statusFilter, setStatusFilter] = useState("all");
+por esta :
+const [statusFilter, setStatusFilter] = useState("healthy");
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
+La página mostraba todos los animales al cargar la aplicación, sin importar su estado (healthy, sick, review).
+Después del cambio:
+Ahora, al cargar la página, solo se muestran los animales con estado "healthy" (saludables).
+Es decir, el filtro de estado ya no inicia en “All”, sino automáticamente en “Healthy”.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+El filtro de estado se aplica automáticamente al iniciar la página.
+La lista de animales aparece filtrada desde el principio.
+El usuario solo verá animales en buen estado (“healthy”) a menos que cambie el filtro manualmente desde el select.
+El comportamiento de búsqueda y otros filtros sigue funcionando igual, solo que ahora el estado inicial no es “all”.

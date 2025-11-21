@@ -1,4 +1,4 @@
-En esta actividad se agregó un nuevo filtro por edad mínima a la aplicación SENA Rules, permitiendo a los usuarios ver solo los animales que cumplan con un mínimo de edad especificado. Además, se mejoró la interfaz de filtrado para incluir este nuevo control.
+En esta actividad se agregó un nuevo filtro por edad mínima a la app, permitiendo a los usuarios ver solo los animales que cumplan con un mínimo de edad especificado. Además, se mejoró la interfaz de filtrado para incluir este nuevo control.
 
 Estado del nuevo filtro; Se creó un estado adicional para almacenar la edad mínima ingresada por el usuario:const [minAge, setMinAge] = useState(0);
 Este estado se inicializa en 0 para que, por defecto, no se excluya ningún animal.

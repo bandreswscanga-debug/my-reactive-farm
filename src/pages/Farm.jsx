@@ -1,156 +1,169 @@
-import { useEffect, useMemo, useState } from "react";
-import Layout from "../components/Layout.jsx";
-import Alert from "../components/Alert.jsx";
-import Loader from "../components/Loader.jsx";
-import AnimalList from "../components/AnimalList.jsx";
-import AnimalForm from "../components/AnimalForm.jsx";
-import { getAnimals, createAnimal } from "../services/animalsApi.js";
+import { useState, useEffect } from "react";
 
-// Filtros disponibles
-const TYPES = ["all", "cow", "chicken", "sheep", "pig", "other"];
-const STATUSES = ["all", "healthy", "review", "sick"];
+export default function AnimalForm({ onSubmit, submitError }) {
+  const [values, setValues] = useState({
+    name: "",
+    type: "cow",
+    age: "",
+    weight: "",
+    status: "healthy",
+  });
 
-export default function Farm() {
-  const [animals, setAnimals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  const [errors, setErrors] = useState({});
 
-  // Filtros UI
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [query, setQuery] = useState("");
-
-  // Error de envío desde el formulario (red / servidor)
-  const [submitError, setSubmitError] = useState(null);
-
-  // Carga inicial con useEffect
+  //  MEJORA 1 — Validación instantánea (live validation)
   useEffect(() => {
-    let cancelled = false;
-    async function fetchAnimals() {
-      try {
-        setLoading(true);
-        setLoadError(null);
-        const data = await getAnimals();
-        if (!cancelled) setAnimals(data);
-      } catch (err) {
-        if (!cancelled) setLoadError("Failed to load animals. Please retry.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    fetchAnimals();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const newErrors = validate(values);
+    setErrors(newErrors);
+  }, [values]);
 
-  // Crear animal (llamado por AnimalForm)
-  async function handleCreate(animal) {
-    try {
-      setSubmitError(null);
-      const created = await createAnimal(animal);
-      // Optimistic update (prepend)
-      setAnimals((prev) => [created, ...prev]);
-      return created;
-    } catch (err) {
-      setSubmitError("Could not create the animal. Try again.");
-      throw err; // mantiene el flujo del formulario
+  function validate(data) {
+    const err = {};
+
+    if (!data.name.trim()) err.name = "Name is required.";
+    if (!data.age || data.age <= 0) err.age = "Age must be a positive number.";
+    if (!data.weight || data.weight <= 0)
+      err.weight = "Weight must be a positive number.";
+
+    return err;
+  }
+
+  // Manejo de cambios
+  function handleChange(e) {
+    const { name, value } = e.target;
+
+    setValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Limpia error del campo editado
+    if (errors[name]) {
+      setErrors((prev) => {
+        const clone = { ...prev };
+        delete clone[name];
+        return clone;
+      });
     }
   }
 
-  // Derivar lista filtrada + búsqueda
-  const filteredAnimals = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return animals.filter((a) => {
-      const byType = typeFilter === "all" || a.type === typeFilter;
-      const byStatus = statusFilter === "all" || a.status === statusFilter;
-      const byQuery =
-        q.length === 0 ||
-        a.name?.toLowerCase().includes(q) ||
-        a.type?.toLowerCase().includes(q) ||
-        String(a.weight).includes(q) ||
-        String(a.age).includes(q);
-      return byType && byStatus && byQuery;
+  // Manejo de envío
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const formErrors = validate(values);
+    setErrors(formErrors);
+
+    if (Object.keys(formErrors).length > 0) return;
+
+    await onSubmit(values);
+
+    // Limpieza del formulario
+    setValues({
+      name: "",
+      type: "cow",
+      age: "",
+      weight: "",
+      status: "healthy",
     });
-  }, [animals, typeFilter, statusFilter, query]);
+  }
 
   return (
-    <Layout title="My Reactive Farm 🐄🌾">
-      {/* Loading / Error de carga */}
-      {loading && <Loader message="Fetching animals from the farm…" />}
-      {loadError && <Alert variant="error">{loadError}</Alert>}
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 rounded-lg border border-gray-300 p-4 dark:border-neutral-700 dark:bg-neutral-900"
+    >
+      {/* NOMBRE */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Name</label>
+        <input
+          type="text"
+          name="name"
+          value={values.name}
+          onChange={handleChange}
+          placeholder="Ej: Lola"  
+          className="w-full rounded-md border px-3 py-2 text-sm dark:bg-neutral-800"
+        />
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+        )}
+      </div>
 
-      {/* Contenido principal */}
-      {!loading && !loadError && (
-        <div className="space-y-8">
-          {/* Formulario controlado para crear animales */}
-          <section aria-labelledby="create-animal">
-            <h2 id="create-animal" className="mb-3 text-xl font-semibold">
-              Add new animal
-            </h2>
-            <AnimalForm onSubmit={handleCreate} submitError={submitError} />
-          </section>
+      {/* TIPO */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Type</label>
+        <select
+          name="type"
+          value={values.type}
+          onChange={handleChange}
+          className="w-full rounded-md border px-3 py-2 text-sm dark:bg-neutral-800"
+        >
+          <option value="cow">Cow</option>
+          <option value="chicken">Chicken</option>
+          <option value="pig">Pig</option>
+          <option value="sheep">Sheep</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
 
-          {/* Filtros y lista */}
-          <section aria-labelledby="animals-list">
-            <h2 id="animals-list" className="sr-only">
-              Animals
-            </h2>
+      {/* EDAD */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Age</label>
+        <input
+          type="number"
+          name="age"
+          value={values.age}
+          onChange={handleChange}
+          placeholder="Ej: 3"  
+          className="w-full rounded-md border px-3 py-2 text-sm dark:bg-neutral-800"
+        />
+        {errors.age && (
+          <p className="text-red-500 text-xs mt-1">{errors.age}</p>
+        )}
+      </div>
 
-            <AnimalList animals={filteredAnimals}>
-              {/* Controls (composición) */}
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Search */}
-                <label className="sr-only" htmlFor="search">
-                  Search
-                </label>
-                <input
-                  id="search"
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by name, type, age, weight…"
-                  className="w-64 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
-                />
+      {/* PESO */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Weight (kg)</label>
+        <input
+          type="number"
+          name="weight"
+          value={values.weight}
+          onChange={handleChange}
+          placeholder="Ej: 250" 
+          className="w-full rounded-md border px-3 py-2 text-sm dark:bg-neutral-800"
+        />
+        {errors.weight && (
+          <p className="text-red-500 text-xs mt-1">{errors.weight}</p>
+        )}
+      </div>
 
-                {/* Type filter */}
-                <label className="sr-only" htmlFor="type-filter">
-                  Type
-                </label>
-                <select
-                  id="type-filter"
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
-                >
-                  {TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
+      {/* ESTADO */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Status</label>
+        <select
+          name="status"
+          value={values.status}
+          onChange={handleChange}
+          className="w-full rounded-md border px-3 py-2 text-sm dark:bg-neutral-800"
+        >
+          <option value="healthy">Healthy</option>
+          <option value="review">Under Review</option>
+          <option value="sick">Sick</option>
+        </select>
+      </div>
 
-                {/* Status filter */}
-                <label className="sr-only" htmlFor="status-filter">
-                  Status
-                </label>
-                <select
-                  id="status-filter"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </AnimalList>
-          </section>
-        </div>
+      {/* ERROR DE API */}
+      {submitError && (
+        <p className="text-red-500 text-sm">{submitError}</p>
       )}
-    </Layout>
+
+      <button
+        type="submit"
+        className="rounded-md bg-green-600 px-4 py-2 text-white text-sm hover:bg-green-700"
+      >
+        Add Animal
+      </button>
+    </form>
   );
 }

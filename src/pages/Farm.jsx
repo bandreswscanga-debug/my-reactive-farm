@@ -17,7 +17,7 @@ export default function Farm() {
 
   // Filtros UI
   const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("healthy");
   const [query, setQuery] = useState("");
 
   // Error de envío desde el formulario (red / servidor)

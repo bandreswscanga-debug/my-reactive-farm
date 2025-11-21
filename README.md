@@ -1,16 +1,12 @@
-# React + Vite
+En esta actividad se agregó un nuevo filtro por edad mínima a la aplicación SENA Rules, permitiendo a los usuarios ver solo los animales que cumplan con un mínimo de edad especificado. Además, se mejoró la interfaz de filtrado para incluir este nuevo control.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Estado del nuevo filtro; Se creó un estado adicional para almacenar la edad mínima ingresada por el usuario:const [minAge, setMinAge] = useState(0);
+Este estado se inicializa en 0 para que, por defecto, no se excluya ningún animal.
 
-Currently, two official plugins are available:
+Lógica de filtrado
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Se ajustó la derivación de la lista filtrada (filteredAnimals) agregando una condición que verifica si cada animal cumple con la edad mínima:const byMinAge = a.age >= minAge;
 
-## React Compiler
+Esta condición se combina con los filtros existentes (typeFilter, statusFilter y query), de modo que un animal solo se muestra si cumple todos los criterios:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+return byType && byStatus && byQuery && byMinAge;
